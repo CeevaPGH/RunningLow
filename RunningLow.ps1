@@ -51,7 +51,7 @@ param(
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_smtp_port = 25,
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
-	$email_from = "username@yourdomain.com"
+	$email_from = "username@yourdomain.com",
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_use_ssl = $true
 )
