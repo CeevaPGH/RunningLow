@@ -34,24 +34,23 @@ param(
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$volumes = $null,
 
-	# - email_to : If specIfied, will send a low-disk-space warning email to the given colon-separated addresses.
-	#              Example: $email_to = "my@email.com:your@email.com"
+	# - email_to : If specIfied, will send a low-disk-space warning email to the given comma-separated addresses.
+	#              Example: $email_to = "my@email.com,your@email.com"
 	#              Default is $null (no e-mail will be sent). Replace it with your@email.com If you don't want to set it from the CLI.
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	[string] $email_to = $null,
 
 	# These parameters can be used to set your SMTP configuration: username, password & so on. 
 	# It's strongly advisable to set them within the code instead of setting them from the CLI, as you might rarely want to change them.
+	# Note: SSL is enabled by default. If you must use plaintext, remove "-UseSsl" from the Send-MailMessage cmdlet.
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_username = "username@yourdomain.com",
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
-	$email_password = "yourpassword",
+	[SecureString] $email_password = (ConvertTo-SecureString "yourpassword" -AsPlainText -Force),
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_smtp_host = "smtp.yourdomain.com",
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_smtp_port = 25,
-	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
-	$email_smtp_SSL = 0,
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_from = "username@yourdomain.com"
 )
@@ -108,44 +107,44 @@ ForEach ($cur_host in $hosts.split($sep)) {
 			If ($email_to) {
 				Write-Host(": sending e-mail...") -noNewLine
 
-				$message = new-object Net.Mail.MailMessage
-				$message.From = $email_from
-				ForEach ($to in $email_to.split($sep)) {
-					$message.To.Add($to)
-				}
-				$message.Subject =	"[RunningLow] WARNING: $cur_host drive $d has less than $minSize bytes free"
-				$message.Subject +=	" ($disk_free_bytes bytes - $disk_free_gigs GB)"
-				$message.Body =		"Hello there, `r`n`r`n"
-				$message.Body +=	"this is an automatic e-mail message sent by the RunningLow Powershell script "
-				$message.Body +=	"to inform you that $this_computer_name drive $d is running low on free space. `r`n`r`n"
-				$message.Body +=	"--------------------------------------------------------------"
-				$message.Body +=	"`r`n"
-				$message.Body +=	"Machine HostName: $this_computer_name `r`n"
-				$message.Body +=	"Machine IP Address(es): "
+				$email_credential = New-Object System.Management.Automation.PSCredential($email_username,$email_password)
+				$message_subject =	"[RunningLow] WARNING: $cur_host drive $d has less than $minSize bytes free"
+				$message_subject +=	" ($disk_free_bytes bytes - $disk_free_gigs GB)"
+				$message_body =		"Hello there, `r`n`r`n"
+				$message_body +=	"this is an automatic e-mail message sent by the RunningLow Powershell script "
+				$message_body +=	"to inform you that $this_computer_name drive $d is running low on free space. `r`n`r`n"
+				$message_body +=	"--------------------------------------------------------------"
+				$message_body +=	"`r`n"
+				$message_body +=	"Machine HostName: $this_computer_name `r`n"
+				$message_body +=	"Machine IP Address(es): "
 				$ipAddresses = Get-NetIPAddress -AddressFamily IPv4
 				ForEach ($ip in $ipAddresses) {
 					If ($ip.IPAddress -like "127.0.0.1") {
 						continue
 					}
-					$message.Body += $ip.IPAddress + " "
+					$message_body += $ip.IPAddress + " "
 				}
-				$message.Body += 	"`r`n"
-				$message.Body += 	"Used space on drive $d : " + $disk.Used + " B. `r`n"
-				$message.Body += 	"Free space on drive $d : $disk_free_bytes B. `r`n"
-				$message.Body += 	"--------------------------------------------------------------"
-				$message.Body +=	"`r`n`r`n"
-				$message.Body += 	"This warning will fire when the free space is lower than $minSize B`r`n`r`n"
-
-				$smtp = new-object Net.Mail.SmtpClient($email_smtp_host, $email_smtp_port)
-				$smtp.EnableSSL = $email_smtp_SSL
-				$smtp.Credentials = New-Object System.Net.NetworkCredential($email_username, $email_password)
-				Try {
-					$smtp.send($message)
-					$message.Dispose()
-					Write-Host " E-Mail sent!"
+				$message_body += 	"`r`n"
+				$message_body += 	"Used space on drive $d : " + $disk.Used + " B. `r`n"
+				$message_body += 	"Free space on drive $d : $disk_free_bytes B. `r`n"
+				$message_body += 	"--------------------------------------------------------------"
+				$message_body +=	"`r`n`r`n"
+				$message_body += 	"This warning will fire when the free space is lower than $minSize B`r`n`r`n"
+				
+				try {
+					Send-MailMessage -To $email_to `
+						-Subject $message_subject `
+						-From $email_from `
+						-Body $message_body `
+						-SmtpServer $email_smtp_host `
+						-Port $email_smtp_port `
+						-UseSsl `
+						-Credential $email_credential `
+						-ErrorAction Stop
 				}
-				Catch {
-					Write-Host "`n`t`tUnable to send email. Check that your email settings are valid.`n`t`t$_" -ForegroundColor Red
+				catch {
+					Write-Host "failed!" -ForegroundColor Red
+					Write-Host "`n`t`t$_"
 				}
 			}
 			Else {
