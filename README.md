@@ -30,7 +30,7 @@ Example: $volumes = "C:D";
     - email_to
 If specified, will send a low-disk-space warning email to the given colon-separated addresses.
 
-Example: $email_to = "my@email.com:your@email.com";
+Example: $email_to = "my@email.com;your@email.com";
 
 Default is $null (no e-mail will be sent). Replace it with your@email.com if you don't want to set it from the CLI.
 	
@@ -38,7 +38,7 @@ Default is $null (no e-mail will be sent). Replace it with your@email.com if you
     - email_password = "yourpassword"
     - email_smtp_host = "smtp.yourdomain.com"
     - email_smtp_port = 25
-    - email_smtp_SSL = 0
+    - email_use_ssl = $true
     - email_from = "username@yourdomain.com"
 
 The above parameters can be used to set up your SMTP configuration for sending the e-mail alerts: username, password & so on. It's strongly advisable to set them within the code instead of setting them from the CLI, as you might rarely want to change them. Needless to say, if you don't want RunningLow to send any e-mail, you might as well skip the whole part: just remember to set `-email_to` value to `$null` to have the code skip that as well.

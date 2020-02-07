@@ -35,14 +35,13 @@ param(
 	$volumes = $null,
 
 	# - email_to : If specIfied, will send a low-disk-space warning email to the given comma-separated addresses.
-	#              Example: $email_to = "my@email.com,your@email.com"
+	#              Example: $email_to = "my@email.com;your@email.com"
 	#              Default is $null (no e-mail will be sent). Replace it with your@email.com If you don't want to set it from the CLI.
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	[string] $email_to = $null,
 
 	# These parameters can be used to set your SMTP configuration: username, password & so on. 
 	# It's strongly advisable to set them within the code instead of setting them from the CLI, as you might rarely want to change them.
-	# Note: SSL is enabled by default. If you must use plaintext, remove "-UseSsl" from the Send-MailMessage cmdlet.
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_username = "username@yourdomain.com",
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
@@ -53,6 +52,8 @@ param(
 	$email_smtp_port = 25,
 	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
 	$email_from = "username@yourdomain.com"
+	[Parameter(Mandatory=$false,ValueFromPipelineByPropertyName=$false)]
+	$email_use_ssl = $true
 )
 
 $sep = ":"
@@ -131,16 +132,19 @@ ForEach ($cur_host in $hosts.split($sep)) {
 				$message_body +=	"`r`n`r`n"
 				$message_body += 	"This warning will fire when the free space is lower than $minSize B`r`n`r`n"
 				
+
+				$mailParam = @{
+					To = $email_to.Split(";")
+					From = $email_from
+					Subject = $message_subject
+					Body = $message_body
+					SmtpServer = $email_smtp_host
+					Port = $email_smtp_port
+					Credential = $email_credential
+					UseSsl = $email_use_ssl
+				}
 				try {
-					Send-MailMessage -To $email_to `
-						-Subject $message_subject `
-						-From $email_from `
-						-Body $message_body `
-						-SmtpServer $email_smtp_host `
-						-Port $email_smtp_port `
-						-UseSsl `
-						-Credential $email_credential `
-						-ErrorAction Stop
+					Send-MailMessage @mailParam -ErrorAction Stop
 				}
 				catch {
 					Write-Host "failed!" -ForegroundColor Red
