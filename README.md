@@ -87,6 +87,3 @@ In the  **New Action**  window you can either insert the full execution statemen
 Be sure to test it again – by setting an insanely high  **$minSize** – on the server as well, to be sure that there are no firewalls or other restrictions that would block the e-mail alerts.
 
 Well, that’s it for now: I sincerely hope that you will enjoy having **RunningLow** on your servers just like I do!
-
-## References
- - [https://www.ryadel.com/en/runninglow-free-powershell-script-check-low-disk-space-send-email-alert/](https://www.ryadel.com/en/runninglow-free-powershell-script-check-low-disk-space-send-email-alert/) - Informative post about this project.
