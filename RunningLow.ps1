@@ -144,7 +144,7 @@ ForEach ($cur_host in $hosts.split($sep)) {
 				}
 				catch {
 					Write-Host "failed!" -ForegroundColor Red
-					Write-Host "`n`t`t$_"
+					Write-Host "`n`t`t$_" -ForegroundColor Red
 				}
 			}
 			Else {
