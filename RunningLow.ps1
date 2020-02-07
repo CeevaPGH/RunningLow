@@ -131,7 +131,7 @@ ForEach ($cur_host in $hosts.split($sep)) {
 				}
 				$message.Body += 	"`r`n"
 				$message.Body += 	"Used space on drive $d : " + $disk.Used + " B. `r`n"
-				$message.Body += 	"Free space on drive $d + $disk_free_bytes B. `r`n"
+				$message.Body += 	"Free space on drive $d : $disk_free_bytes B. `r`n"
 				$message.Body += 	"--------------------------------------------------------------"
 				$message.Body +=	"`r`n`r`n"
 				$message.Body += 	"This warning will fire when the free space is lower than $minSize B`r`n`r`n"
